@@ -482,12 +482,8 @@ pub(crate) fn start_client(opts: CliArgs) {
                 },
             };
 
-            let tab_position_to_focus = reconnect_to_session
-                .as_ref()
-                .and_then(|r| r.tab_position);
-            let pane_id_to_focus = reconnect_to_session
-                .as_ref()
-                .and_then(|r| r.pane_id);
+            let tab_position_to_focus = reconnect_to_session.as_ref().and_then(|r| r.tab_position);
+            let pane_id_to_focus = reconnect_to_session.as_ref().and_then(|r| r.pane_id);
             reconnect_to_session = start_client_impl(
                 Box::new(os_input),
                 opts,
