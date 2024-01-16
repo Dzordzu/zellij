@@ -23,6 +23,7 @@ fn parse_github_uri(remote: &str) -> anyhow::Result<String> {
     }
 
     Ok(remote
+        .replace(':', "/")
         .split('/')
         .rev()
         .nth(1)
