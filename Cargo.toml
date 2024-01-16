@@ -16,17 +16,17 @@ rust-version = "1.60"
 zellij-client = { path = "zellij-client/", version = "0.40.0" }
 zellij-server = { path = "zellij-server/", version = "0.40.0" }
 zellij-utils = { path = "zellij-utils/", version = "0.40.0" }
-thiserror = "1.0.40"
+thiserror = "1.0.56"
 names = { version = "0.14.0", default-features = false }
-log = "0.4.17"
+log = "0.4.20"
 dialoguer = "0.10.4"
 suggest = "0.4.0"
 
 [dev-dependencies]
 insta = { version = "1.6.0", features = ["backtrace"] }
-ssh2 = "0.9.1"
-rand = "0.8.0"
-regex = "1.8.1"
+ssh2 = "0.9.4"
+rand = "0.8.5"
+regex = "1.9.6"
 
 [workspace]
 members = [
