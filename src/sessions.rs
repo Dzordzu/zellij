@@ -23,7 +23,7 @@ pub(crate) fn get_sessions() -> Result<Vec<(String, Duration)>, io::ErrorKind> {
             files.for_each(|file| {
                 let file = file.unwrap();
                 let file_name = file.file_name().into_string().unwrap();
-                let ctime = std::fs::metadata(&file.path())
+                let ctime = std::fs::metadata(file.path())
                     .ok()
                     .and_then(|f| f.created().ok())
                     .and_then(|d| d.elapsed().ok())
@@ -163,9 +163,9 @@ pub(crate) fn print_sessions(
             }
             if no_formatting {
                 let suffix = if curr_session == *session_name {
-                    format!("(current)")
+                    "(current)".to_string()
                 } else if *is_dead {
-                    format!("(EXITED - attach to resurrect)")
+                    "(EXITED - attach to resurrect)".to_string()
                 } else {
                     String::new()
                 };
@@ -174,9 +174,9 @@ pub(crate) fn print_sessions(
             } else {
                 let formatted_session_name = format!("\u{1b}[32;1m{}\u{1b}[m", session_name);
                 let suffix = if curr_session == *session_name {
-                    format!("(current)")
+                    "(current)".to_string()
                 } else if *is_dead {
-                    format!("(\u{1b}[31;1mEXITED\u{1b}[m - attach to resurrect)")
+                    "(\u{1b}[31;1mEXITED\u{1b}[m - attach to resurrect)".to_string()
                 } else {
                     String::new()
                 };
@@ -259,7 +259,7 @@ pub(crate) fn list_sessions(no_formatting: bool, short: bool) {
             let resurrectable_sessions = get_resurrectable_sessions();
             let mut all_sessions: HashMap<String, (Duration, bool)> = resurrectable_sessions
                 .iter()
-                .map(|(name, timestamp, _layout)| (name.clone(), (timestamp.clone(), true)))
+                .map(|(name, timestamp, _layout)| (name.clone(), (*timestamp, true)))
                 .collect();
             for (session_name, duration) in running_sessions {
                 all_sessions.insert(session_name.clone(), (duration, false));
@@ -272,7 +272,7 @@ pub(crate) fn list_sessions(no_formatting: bool, short: bool) {
                     all_sessions
                         .iter()
                         .map(|(name, (timestamp, is_dead))| {
-                            (name.clone(), timestamp.clone(), *is_dead)
+                            (name.clone(), *timestamp, *is_dead)
                         })
                         .collect(),
                     no_formatting,
@@ -406,7 +406,7 @@ pub(crate) fn assert_session_ne(name: &str) {
     match session_exists(name) {
         Ok(result) if !result => {
             let resurrectable_sessions = get_resurrectable_sessions();
-            if resurrectable_sessions.iter().find(|(s, _, _)| s == name).is_some() {
+            if resurrectable_sessions.iter().any(|(s, _, _)| s == name) {
                 println!("Session with name {:?} already exists, but is dead. Use the attach command to resurrect it or, the delete-session command to kill it or specify a different name.", name);
             } else {
                 return
@@ -427,10 +427,10 @@ pub(crate) fn assert_session_ne(name: &str) {
 /// and offensive combinations. Care should be taken when adding or removing to either list due to the birthday paradox/
 /// hash collisions, e.g. with 4096 unique names, the likelihood of a collision in 10 session names is 1%.
 pub(crate) fn get_name_generator() -> impl Iterator<Item = String> {
-    names::Generator::new(&ADJECTIVES, &NOUNS, names::Name::Plain)
+    names::Generator::new(ADJECTIVES, NOUNS, names::Name::Plain)
 }
 
-const ADJECTIVES: &[&'static str] = &[
+const ADJECTIVES: &[&str] = &[
     "adamant",
     "adept",
     "adventurous",
@@ -498,7 +498,7 @@ const ADJECTIVES: &[&'static str] = &[
     "zippy",
 ];
 
-const NOUNS: &[&'static str] = &[
+const NOUNS: &[&str] = &[
     "aardvark",
     "accordion",
     "apple",
