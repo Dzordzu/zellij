@@ -1,5 +1,5 @@
-use crate::{flags, remote};
-use anyhow::{anyhow, Context};
+use crate::flags;
+
 use std::ffi::OsString;
 use xshell::{cmd, Shell};
 
@@ -16,29 +16,28 @@ fn show_remotes(sh: &Shell, remotes: &[String]) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn create_remote(sh: &Shell, remotes: &[String], remote: &OsString) -> anyhow::Result<()> {
-    let remote = remote.to_string_lossy().to_string();
-
+/// Returns parsed remote_name from github uri OR
+fn parse_github_uri(remote: &str) -> anyhow::Result<String> {
     if !remote.contains("github.com") {
         return Err(anyhow::anyhow!("URI has to refer to the github"));
     }
 
-    let remote_name = remote
+    Ok(remote
         .split('/')
         .rev()
-        .skip(1)
-        .next()
-        .map(|x| Ok(x))
+        .nth(1)
+        .map(Ok)
         .unwrap_or(Err(anyhow::anyhow!("Not a valid url")))?
         .to_string()
         .to_lowercase()
-        + "-xtask";
+        + "-xtask")
+}
 
-    if remotes
-        .iter()
-        .find(|x| x.trim() == remote_name.trim())
-        .is_none()
-    {
+fn create_remote(sh: &Shell, remotes: &[String], remote: &OsString) -> anyhow::Result<()> {
+    let remote = remote.to_string_lossy().to_string();
+    let remote_name = parse_github_uri(&remote)?;
+
+    if !remotes.iter().any(|x| x.trim() == remote_name.trim()) {
         cmd!(sh, "git remote add")
             .arg(&remote_name)
             .arg(&remote)
@@ -64,18 +63,19 @@ fn create_remote(sh: &Shell, remotes: &[String], remote: &OsString) -> anyhow::R
 fn current_remote(sh: &Shell) -> anyhow::Result<String> {
     let symbolic_ref = String::from_utf8(cmd!(sh, "git symbolic-ref -q HEAD").output()?.stdout)?;
 
-    return Ok(String::from_utf8(
+    Ok(String::from_utf8(
         cmd!(sh, "git for-each-ref --format='%(upstream:short)'")
             .arg(symbolic_ref)
             .output()?
             .stdout,
-    )?);
+    )?)
 }
 
 fn delete_remote(sh: &Shell, remotes: &[String], remote: &OsString) -> anyhow::Result<()> {
     let remote = remote.to_string_lossy().to_string();
+    let remote = parse_github_uri(&remote).unwrap_or(remote);
 
-    if remotes.iter().find(|x| *x == &remote).is_some() {
+    if remotes.iter().any(|x| x == &remote) {
         if current_remote(sh)? == remote {
             cmd!(sh, "git checkout main").run()?;
         }
@@ -110,7 +110,7 @@ pub fn remote(sh: &Shell, flags: flags::Remote) -> anyhow::Result<()> {
         },
         None => {
             if !flags.list {
-                return Err(anyhow::anyhow!("You need to specify github_uri"));
+                return Err(anyhow::anyhow!("You need to specify github_uri or -l flag"));
             }
         },
     }

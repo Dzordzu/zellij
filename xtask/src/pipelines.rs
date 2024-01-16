@@ -85,7 +85,7 @@ pub fn install(sh: &Shell, flags: flags::Install) -> anyhow::Result<()> {
             .join(&flags.destination)
     };
     sh.change_dir(crate::project_root());
-    sh.copy_file("target/release/zellij", &destination)
+    sh.copy_file("target/release/zellij", destination)
         .with_context(err_context)
 }
 

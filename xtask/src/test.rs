@@ -28,7 +28,7 @@ pub fn test(sh: &Shell, flags: flags::Test) -> anyhow::Result<()> {
 
         let _pd = sh.push_dir(Path::new(crate_name));
         // Tell the user where we are now
-        println!("");
+        println!();
         let msg = format!(">> Testing '{}'", crate_name);
         crate::status(&msg);
         println!("{}", msg);
@@ -60,9 +60,9 @@ pub fn host_target_triple(sh: &Shell) -> anyhow::Result<String> {
                 return None;
             }
             if let Some((_, triple)) = line.split_once(": ") {
-                return Some(triple.to_string());
+                Some(triple.to_string())
             } else {
-                return None;
+                None
             }
         })
         .collect::<Vec<String>>();
