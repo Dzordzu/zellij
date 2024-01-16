@@ -98,6 +98,19 @@ xflags::xflags! {
             /// Build everything except the plugins
             optional --no-plugins
         }
+
+        /// Fetch a new remote and checkout to it
+        cmd remote {
+
+            /// Delete remote
+            optional -d, --delete
+
+            /// List remotes (simple git remote)
+            optional -l, --list
+
+            /// Github URI of the fork to add or the remote to delete
+            optional remote: OsString
+        }
     }
 }
 // generated start
@@ -122,6 +135,7 @@ pub enum XtaskCmd {
     Format(Format),
     Test(Test),
     Build(Build),
+    Remote(Remote),
 }
 
 #[derive(Debug)]
@@ -205,6 +219,13 @@ pub struct Build {
     pub release: bool,
     pub plugins_only: bool,
     pub no_plugins: bool,
+}
+
+#[derive(Debug)]
+pub struct Remote {
+    pub delete: bool,
+    pub list: bool,
+    pub remote: Option<OsString>,
 }
 
 impl Xtask {

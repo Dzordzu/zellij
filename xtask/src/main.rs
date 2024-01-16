@@ -13,6 +13,7 @@ mod dist;
 mod flags;
 mod format;
 mod pipelines;
+mod remote;
 mod test;
 
 use anyhow::Context;
@@ -66,6 +67,7 @@ fn main() -> anyhow::Result<()> {
         flags::XtaskCmd::Run(flags) => pipelines::run(shell, flags),
         flags::XtaskCmd::Ci(flags) => ci::main(shell, flags),
         flags::XtaskCmd::Publish(flags) => pipelines::publish(shell, flags),
+        flags::XtaskCmd::Remote(flags) => remote::remote(shell, flags),
     }?;
 
     let elapsed = now.elapsed().as_secs();
