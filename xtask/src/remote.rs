@@ -34,7 +34,11 @@ fn create_remote(sh: &Shell, remotes: &[String], remote: &OsString) -> anyhow::R
         .to_lowercase()
         + "-xtask";
 
-    if remotes.iter().find(|x| *x == &remote).is_none() {
+    if remotes
+        .iter()
+        .find(|x| x.trim() == remote_name.trim())
+        .is_none()
+    {
         cmd!(sh, "git remote add")
             .arg(&remote_name)
             .arg(&remote)
@@ -45,11 +49,11 @@ fn create_remote(sh: &Shell, remotes: &[String], remote: &OsString) -> anyhow::R
 
     let branches = String::from_utf8(cmd!(sh, "git branch -r").output()?.stdout)?;
 
-    println!("Remote branches for {}", &remote);
+    println!("\nRemote branches for {}", &remote);
 
     for branch in branches
         .split('\n')
-        .filter(|x| x.split('\n').next().is_some_and(|x| x == remote_name))
+        .filter(|x| x.split('/').next().is_some_and(|x| x.trim() == remote_name))
     {
         println!("\t{}", branch);
     }
@@ -82,16 +86,19 @@ fn delete_remote(sh: &Shell, remotes: &[String], remote: &OsString) -> anyhow::R
     Ok(())
 }
 
+fn get_remotes(sh: &Shell) -> anyhow::Result<Vec<String>> {
+    Ok(String::from_utf8(cmd!(sh, "git remote").output()?.stdout)?
+        .split('\n')
+        .map(|x| x.to_string())
+        .filter(|x| !x.trim().is_empty())
+        .collect())
+}
+
 /// Add a new remote and checkout to it
 pub fn remote(sh: &Shell, flags: flags::Remote) -> anyhow::Result<()> {
     let _pd = sh.push_dir(crate::project_root());
 
-    let remotes_cmd = cmd!(sh, "git remote");
-    let remotes: Vec<String> = String::from_utf8(remotes_cmd.output()?.stdout)?
-        .split('\n')
-        .map(|x| x.to_string())
-        .filter(|x| !x.trim().is_empty())
-        .collect();
+    let remotes = get_remotes(sh)?;
 
     match flags.remote {
         Some(remote) => {
@@ -109,7 +116,7 @@ pub fn remote(sh: &Shell, flags: flags::Remote) -> anyhow::Result<()> {
     }
 
     if flags.list {
-        show_remotes(sh, &remotes)?;
+        show_remotes(sh, &get_remotes(sh)?)?;
     }
 
     Ok(())
